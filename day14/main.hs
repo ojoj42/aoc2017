@@ -1,17 +1,43 @@
 import Data.Bits
 import Data.Char
+import Numeric (showHex, showIntAtBase)
+
+import Control.Applicative
+import Control.Arrow
+import Data.Graph.Inductive
 
 main :: IO ()
 main = do
     let key = "wenycdww"
     let test = hashToInt $ knotHash "flqrgnkx-0"
 
+    -- part 1
     let a = sum [sum [popCount d | d <-(hashToInt $ knotHash t)] | i <- [0..127], let t = key ++ "-" ++ show i]
 
-    print a
+    let m = [hexToBinary (hashToInt $ knotHash t) | i <- [0..127], let t = key ++ "-" ++ show i]
+    let ns =   [(j*128 + i, Just 1)| i <-[0..127], j <-[0..127], ((m!!j)!!i) /= 0]
+    let nes =   concat [[(j*128 + i,b*128 + a, ()) | (a,b) <- (neigh (i, j) (127, 127) m)] | i <-[0..127], j <-[0..127], ((m!!j)!!i) /= 0]
+    --g :: Gr (Maybe Int) ()
+    let g = (mkGraph ns nes) :: Gr (Maybe Int) ()
+    print $ show $ length ns
+    print $ show g
+    --print ns
+
+    --print a
+
+graph :: Gr (Maybe Int) ()
+graph =  mkGraph [(1, Just 1),(2, Just 2), (3, Just 3)] [(1,2,())]
 
 
---popCount counts bits in argument
+hexToBinary :: [Int] -> [Int]
+hexToBinary input = concat [[foo((.&.) i d) | d <- [1, 2, 4, 8]] | i <- input, let foo d = if d > 0 then 1 else 0]
+
+neigh :: (Int, Int) -> (Int, Int) -> [[Int]] -> [(Int, Int)]
+neigh (x,y) (w, h) m = [(x + sx, y + sy) | (sx, sy)  <- [(0,1),(0,-1), (1, 0),(-1, 0)], valid((x + sx, y + sy))]
+                    where valid (a, b) = a >= 0 && a <= w && b >= 0 && b <= h && ((m !! b) !! a) == 1
+
+
+--popCount counts set bits in argument
 
 hashToInt :: [Char] -> [Int]
 hashToInt h = [digitToInt i | i <- h]

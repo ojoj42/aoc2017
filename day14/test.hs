@@ -3,6 +3,7 @@ import Control.Applicative
 import Control.Arrow
 import Data.Graph.Inductive
 
+
 -- Example graph from SO question.
 graph :: Gr (Maybe Int) ()
 graph = mkGraph (map (id&&&Just) [1,2,3,4,5,6,7,8,9])
